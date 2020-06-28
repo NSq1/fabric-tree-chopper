@@ -3,9 +3,8 @@ package com.skaggsm.treechoppermod
 import com.skaggsm.treechoppermod.FabricTreeChopper.config
 import com.skaggsm.treechoppermod.FullChopDurabilityMode.BREAK_AFTER_CHOP
 import com.skaggsm.treechoppermod.FullChopDurabilityMode.BREAK_MID_CHOP
-import net.minecraft.block.BlockState
 import net.minecraft.block.LeavesBlock
-import net.minecraft.block.LogBlock
+import net.minecraft.block.BlockState
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
@@ -44,7 +43,21 @@ private val directions = linkedSetOf(
 )
         // Reversed so that the top gets added to the output list last and gets picked first. Makes log breaking look more "natural".
         .reversed()
-
+private val logs_translation_keys = listOfNotNull(
+        "block.minecraft.oak_log",
+        "block.minecraft.acacia_log",
+        "block.minecraft.spruce_log",
+        "block.minecraft.dark_oak_log",
+        "block.minecraft.jungle_log"
+)
+private val stem_translation_keys = listOfNotNull(
+        "block.minecraft.warped_stem",
+        "block.minecraft.crimson_stem"
+)
+private val stem_leaves_translation_keys = listOfNotNull(
+        "block.minecraft.nether_wart_block",
+        "block.minecraft.warped_wart_block"
+)
 /**
  * If there are other logs, finds the furthest one and swaps it into [blockPos].
  */
@@ -76,7 +89,11 @@ private fun findAllLogsAbove(originalBlockState: BlockState, world: World, origi
                     val state = world.getBlockState(it);
                     if (originalBlockState.block == state.block && it !in foundLogs)
                         logQueue.push(it)
-                    else if (state.contains(LeavesBlock.PERSISTENT) && !state.get(LeavesBlock.PERSISTENT)) {
+                    else if (state.contains(LeavesBlock.PERSISTENT) && !state.get(LeavesBlock.PERSISTENT))
+                        foundNaturalLeaf = true
+                    else if(config.allowStemChop
+                            && stem_translation_keys.contains(originalBlockState.block.translationKey)
+                            && stem_leaves_translation_keys.contains(state.block.translationKey)){
                         foundNaturalLeaf = true
                     }
                 }
@@ -125,9 +142,8 @@ fun maybeBreakAllLogs(originalBlockState: BlockState, world: World, blockPos: Bl
             ItemStack(originalBlockState.block.asItem(), logsBroken)
     ))
 }
-
 fun tryLogBreak(itemStack_1: ItemStack, world_1: World, blockState_1: BlockState, blockPos_1: BlockPos, livingEntity_1: LivingEntity) {
-    if (blockState_1.block is LogBlock && !(livingEntity_1.isSneaking && config.sneakToDisable)) {
+    if (isLogLikeBlock(blockState_1) && !(livingEntity_1.isSneaking && config.sneakToDisable)) {
         when (config.treeChopMode) {
             ChopMode.FULL_CHOP -> maybeBreakAllLogs(blockState_1, world_1, blockPos_1, itemStack_1, livingEntity_1)
             ChopMode.SINGLE_CHOP -> maybeSwapFurthestLog(blockState_1, world_1, blockPos_1)
@@ -135,4 +151,8 @@ fun tryLogBreak(itemStack_1: ItemStack, world_1: World, blockState_1: BlockState
             }
         }
     }
+}
+fun isLogLikeBlock(blockstate: BlockState): Boolean {
+    return logs_translation_keys.contains(blockstate.block.translationKey)
+            || (config.allowStemChop && stem_translation_keys.contains(blockstate.block.translationKey))
 }

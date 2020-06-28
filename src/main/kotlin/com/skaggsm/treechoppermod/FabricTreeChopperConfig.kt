@@ -12,6 +12,7 @@ class FabricTreeChopperConfig : ConfigData {
     var fullChopDurabilityUsage: FullChopDurabilityMode = FullChopDurabilityMode.BREAK_MID_CHOP
     var sneakToDisable: Boolean = true
     var requireLeavesToChop: Boolean = true
+    var allowStemChop: Boolean = true
 }
 
 enum class ChopMode {
