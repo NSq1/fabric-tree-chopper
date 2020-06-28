@@ -3,8 +3,8 @@ package com.skaggsm.treechoppermod
 import com.skaggsm.treechoppermod.FabricTreeChopper.config
 import com.skaggsm.treechoppermod.FullChopDurabilityMode.BREAK_AFTER_CHOP
 import com.skaggsm.treechoppermod.FullChopDurabilityMode.BREAK_MID_CHOP
-import net.minecraft.block.BlockState
 import net.minecraft.block.LeavesBlock
+import net.minecraft.block.BlockState
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.LivingEntity
@@ -50,6 +50,14 @@ private val logs_translation_keys = listOfNotNull(
         "block.minecraft.dark_oak_log",
         "block.minecraft.jungle_log"
 )
+private val stem_translation_keys = listOfNotNull(
+        "block.minecraft.warped_stem",
+        "block.minecraft.crimson_stem"
+)
+private val stem_leaves_translation_keys = listOfNotNull(
+        "block.minecraft.nether_wart_block",
+        "block.minecraft.warped_wart_block"
+)
 /**
  * If there are other logs, finds the furthest one and swaps it into [blockPos].
  */
@@ -83,6 +91,11 @@ private fun findAllLogsAbove(originalBlockState: BlockState, world: World, origi
                         logQueue.push(it)
                     else if (state.contains(LeavesBlock.PERSISTENT) && !state.get(LeavesBlock.PERSISTENT))
                         foundNaturalLeaf = true
+                    else if(config.allowStemChop
+                            && stem_translation_keys.contains(originalBlockState.block.translationKey)
+                            && stem_leaves_translation_keys.contains(state.block.translationKey)){
+                        foundNaturalLeaf = true
+                    }
                 }
         foundLogs += log
     }
@@ -141,4 +154,5 @@ fun tryLogBreak(itemStack_1: ItemStack, world_1: World, blockState_1: BlockState
 }
 fun isLogLikeBlock(blockstate: BlockState): Boolean {
     return logs_translation_keys.contains(blockstate.block.translationKey)
+            || (config.allowStemChop && stem_translation_keys.contains(blockstate.block.translationKey))
 }
